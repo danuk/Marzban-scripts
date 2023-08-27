@@ -142,6 +142,10 @@ install_marzban() {
     sed -i 's/^# \(SQLALCHEMY_DATABASE_URL = .*\)$/\1/' "$APP_DIR/.env"
     sed -i 's~\(XRAY_JSON = \).*~\1"/var/lib/marzban/xray_config.json"~' "$APP_DIR/.env"
     sed -i 's~\(SQLALCHEMY_DATABASE_URL = \).*~\1"sqlite:////var/lib/marzban/db.sqlite3"~' "$APP_DIR/.env"
+
+    [ -z "$SUDO_USERNAME" ] || echo "SUDO_USERNAME=$SUDO_USERNAME" >> "$APP_DIR/.env"
+    [ -z "$SUDO_PASSWORD" ] || echo "SUDO_PASSWORD=$SUDO_PASSWORD" >> "$APP_DIR/.env"
+
     colorized_echo green "File saved in $APP_DIR/.env"
 
     colorized_echo blue "Fetching xray config file"
@@ -240,11 +244,9 @@ install_command() {
     # Check if marzban is already installed
     if is_marzban_installed; then
         colorized_echo red "Marzban is already installed at $APP_DIR"
-        read -p "Do you want to override the previous installation? (y/n) "
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            colorized_echo red "Aborted installation"
-            exit 1
-        fi
+        colorized_echo red "If you want to reinstall it, please run: '$0 uninstall' before"
+        colorized_echo red "Aborted installation"
+        exit 1
     fi
     detect_os
     if ! command -v jq >/dev/null 2>&1; then
@@ -260,7 +262,7 @@ install_command() {
     install_marzban_script
     install_marzban
     up_marzban
-    follow_marzban_logs
+    show_marzban_logs
 }
 
 uninstall_command() {
